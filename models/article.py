@@ -5,6 +5,7 @@ class Article:
     all = {}
 
     def __init__(self, title, content, author_id, magazine_id, id=None):
+        type(self).create_table()
         self.id_ = id
         self.title = title
         self.content = content
@@ -16,7 +17,7 @@ class Article:
     def create_table(cls):
         sql = """
             CREATE TABLE IF NOT EXISTS articles (
-            id INTEGER PRIMARY KEY,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
             title TEXT NOT NULL,
             content TEXT NOT NULL,
             author_id INTEGER,

@@ -9,7 +9,7 @@ class Author:
     def create_table(cls):
         sql = """
             CREATE TABLE IF NOT EXISTS authors (
-            id INTEGER PRIMARY KEY,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL
             )
         """
@@ -33,6 +33,16 @@ class Author:
         author = CURSOR.execute(sql, (id,)).fetchone()
         return cls(author[1], author[0]) if author else None
 
+    @classmethod
+    def instance_from_db(cls, row):
+        author = cls.all.get(row[0])
+        if author:
+            author.name = row[1]
+        else:
+            author = cls(row[1],row[0])
+            cls.all.update({row[0]: author})
+        return author
+
     @property
     def id_(self):
         return self._id
@@ -52,6 +62,7 @@ class Author:
             self._name = name
 
     def __init__(self, name, id=None):
+        type(self).create_table()
         self.id_ = id
         self.name = name
         self.save()
@@ -82,7 +93,7 @@ class Author:
     def magazines(self):
         from models.magazine import Magazine
         sql = """
-            SELECT magazines.name, magazines.category, magazines.id
+            SELECT magazines.id, magazines.name, magazines.category
             FROM articles
             INNER JOIN magazines
             ON articles.magazine_id = magazines.id

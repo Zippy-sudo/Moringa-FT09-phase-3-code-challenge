@@ -8,7 +8,7 @@ class Magazine:
     def create_table(cls):
         sql = """
             CREATE TABLE IF NOT EXISTS magazines(
-            id INTEGER PRIMARY KEY,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
             category TEXT NOT NULL
             )
@@ -90,6 +90,7 @@ class Magazine:
         CONN.commit()   
 
     def __init__(self, name, category, id=None):
+        type(self).create_table()
         self.name = name
         self.category = category
         self.id_ = id
@@ -116,8 +117,38 @@ class Magazine:
         """
         articles = CURSOR.execute(sql, (self.id_,)).fetchall()
         return [Article.instance_from_db(article) for article in articles]
-
-
+    
+    def contributors(self):
+        from models.author import Author
+        sql = """
+            SELECT authors.id, authors.name
+            FROM articles
+            INNER JOIN authors
+            ON articles.author_id = authors.id
+            WHERE articles.magazine_id = ?
+        """
+        authors = CURSOR.execute(sql, (self.id_,)).fetchall()
+        return [Author.instance_from_db(author) for author in authors]
+    
+    def article_titles(self):
+        sql = """
+            SELECT articles.title
+            FROM articles
+            WHERE magazine_id = ?
+        """
+        articles_titles = CURSOR.execute(sql, (self.id_,)).fetchall()
+        return articles_titles if articles_titles else None
+    
+    def contributing_authors(self):
+        ca = []
+        for author in self.contributors():
+            if self.contributors().count(author) >= 2 and ca.count(author) == 0:
+                ca.append(author)
+        
+        if len(ca) == 0:
+            return None
+        
+        return ca
 
     def __repr__(self):
         return f'<Magazine {self.name}>'
